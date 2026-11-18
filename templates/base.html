@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f7f4">
+  <title>{% block title %}Pennywise{% endblock %} · Pennywise</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <a class="brand" href="{{ url_for('tracker.index') }}">
+        <span class="brand-mark">P</span>
+        <span>Pennywise<small>PERSONAL FINANCE</small></span>
+      </a>
+      <div class="nav-label">WORKSPACE</div>
+      <nav class="main-nav" aria-label="Main navigation">
+        <a class="nav-link {% if request.endpoint == 'tracker.index' %}active{% endif %}" href="{{ url_for('tracker.index') }}">
+          <span class="nav-icon">⌂</span> Overview
+        </a>
+        <a class="nav-link {% if request.endpoint in ['tracker.expenses', 'tracker.edit_expense'] %}active{% endif %}" href="{{ url_for('tracker.expenses') }}">
+          <span class="nav-icon">▤</span> Transactions
+        </a>
+      </nav>
+      <a class="sidebar-cta" href="{{ url_for('tracker.create_expense') }}"><span>＋</span> Add expense</a>
+      <div class="sidebar-bottom">
+        <div class="privacy-card">
+          <span class="privacy-icon">◈</span>
+          <strong>Your data stays yours</strong>
+          <p>Expenses are stored locally on this device.</p>
+        </div>
+        <span class="sidebar-foot">MADE FOR MINDFUL SPENDING</span>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="topbar">
+        <div class="mobile-brand"><span class="brand-mark">P</span> Pennywise</div>
+        <div class="topbar-right">
+          <span class="today-label">{{ now().strftime("%A, %B %d") }}</span>
+          <a class="button button-primary button-small" href="{{ url_for('tracker.create_expense') }}"><span>＋</span> Add expense</a>
+        </div>
+      </header>
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <div class="flash-stack" role="status">
+            {% for category, message in messages %}
+              <div class="flash flash-{{ category }}">{{ message }}</div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+      {% block content %}{% endblock %}
+      <footer class="page-footer">Pennywise <span>·</span> Spend with intention.</footer>
+    </main>
+    <nav class="mobile-nav" aria-label="Mobile navigation">
+      <a class="{% if request.endpoint == 'tracker.index' %}active{% endif %}" href="{{ url_for('tracker.index') }}"><span aria-hidden="true">⌂</span>Overview</a>
+      <a class="{% if request.endpoint in ['tracker.expenses', 'tracker.edit_expense'] %}active{% endif %}" href="{{ url_for('tracker.expenses') }}"><span aria-hidden="true">▤</span>Transactions</a>
+      <a class="mobile-add" href="{{ url_for('tracker.create_expense') }}"><span aria-hidden="true">＋</span>Add</a>
+    </nav>
+  </div>
+</body>
+</html>

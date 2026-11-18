@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Transactions{% endblock %}
+{% block content %}
+<section class="page-heading">
+  <div>
+    <div class="eyebrow">YOUR SPENDING HISTORY</div>
+    <h1>Transactions</h1>
+    <p>Every expense, all in one place.</p>
+  </div>
+  <a class="button button-primary" href="{{ url_for('tracker.create_expense') }}"><span>＋</span> Add expense</a>
+</section>
+
+<section class="panel transactions-panel full-transactions">
+  <form class="filter-bar" method="get" action="{{ url_for('tracker.expenses') }}">
+    <label class="search-field"><span>⌕</span><input type="search" name="q" value="{{ filters.q }}" placeholder="Search expenses..." aria-label="Search expenses"></label>
+    <label class="filter-select"><span class="sr-only">Category</span>
+      <select name="category"><option value="">All categories</option>{% for category in categories %}<option value="{{ category }}" {% if filters.category == category %}selected{% endif %}>{{ category }}</option>{% endfor %}</select>
+    </label>
+    <label class="filter-month"><span class="sr-only">Month</span><input type="month" name="month" value="{{ filters.month }}" aria-label="Filter by month"></label>
+    <button class="button button-filter" type="submit">Filter</button>
+    {% if filters.q or filters.category or filters.month %}<a class="clear-filters" href="{{ url_for('tracker.expenses') }}">Clear</a>{% endif %}
+    <a class="button button-outline export-button" href="{{ url_for('tracker.export_expenses', **filters) }}">↓ Export CSV</a>
+  </form>
+
+  {% if expenses %}
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>TRANSACTION</th><th>CATEGORY</th><th>DATE</th><th class="amount-cell">AMOUNT</th><th class="actions-heading">ACTIONS</th></tr></thead>
+        <tbody>
+          {% for expense in expenses %}
+            <tr>
+              <td>
+                <span class="transaction-avatar avatar-{{ loop.index0 % 6 }}">{{ expense.title[:1]|upper }}</span>
+                <span class="transaction-title">{{ expense.title }}{% if expense.notes %}<small class="transaction-note">{{ expense.notes }}</small>{% endif %}</span>
+              </td>
+              <td><span class="category-pill">{{ expense.category }}</span></td>
+              <td class="muted-cell">{{ expense.spent_on }}</td>
+              <td class="amount-cell amount-value">−{{ currency_symbol }}{{ expense.amount_cents|money }}</td>
+              <td class="actions-cell">
+                <a class="action-link" href="{{ url_for('tracker.edit_expense', expense_id=expense.id) }}">Edit</a>
+                <form method="post" action="{{ url_for('tracker.delete_expense', expense_id=expense.id) }}" onsubmit="return confirm('Delete this expense? This cannot be undone.');">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button class="action-link action-delete" type="submit">Delete</button>
+                </form>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="empty-table"><span class="empty-icon">⌕</span><strong>No matching expenses</strong><span>Try changing your filters, or record a new expense.</span><a class="button button-outline" href="{{ url_for('tracker.create_expense') }}">Add an expense</a></div>
+  {% endif %}
+  <div class="table-footer">{{ expenses|length }} {{ "expense" if expenses|length == 1 else "expenses" }}</div>
+</section>
+{% endblock %}

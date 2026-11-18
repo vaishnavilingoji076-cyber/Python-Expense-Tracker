@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block title %}Overview{% endblock %}
+{% block content %}
+<section class="page-heading">
+  <div>
+    <div class="eyebrow">YOUR MONEY, IN FOCUS</div>
+    <h1>Good {{ "morning" if now is defined and now().hour < 12 else ("afternoon" if now is defined and now().hour < 18 else "evening") }}.</h1>
+    <p>A little clarity goes a long way. Here's your spending snapshot.</p>
+  </div>
+  <a class="button button-primary" href="{{ url_for('tracker.create_expense') }}"><span>＋</span> Record an expense</a>
+</section>
+
+<section class="stats-grid" aria-label="Spending summary">
+  <article class="stat-card stat-card-primary">
+    <div class="stat-top"><span class="stat-label">SPENT THIS MONTH</span><span class="stat-icon">↗</span></div>
+    <div class="stat-value">{{ currency_symbol }}{{ month_total|money }}</div>
+    <div class="stat-caption">{{ current_month }}</div>
+    <div class="stat-accent"></div>
+  </article>
+  <article class="stat-card">
+    <div class="stat-top"><span class="stat-label">TRANSACTIONS</span><span class="stat-icon stat-icon-soft">▤</span></div>
+    <div class="stat-value">{{ month_count }}</div>
+    <div class="stat-caption">this month</div>
+  </article>
+  <article class="stat-card">
+    <div class="stat-top"><span class="stat-label">ALL-TIME SPENDING</span><span class="stat-icon stat-icon-soft">◎</span></div>
+    <div class="stat-value">{{ currency_symbol }}{{ overall_total|money }}</div>
+    <div class="stat-caption">across all recorded expenses</div>
+  </article>
+</section>
+
+<section class="dashboard-grid">
+  <article class="panel trend-panel">
+    <div class="panel-heading">
+      <div><h2>Spending rhythm</h2><p>Your last six months at a glance</p></div>
+      <span class="panel-badge">6 MONTHS</span>
+    </div>
+    {% if max_month_total %}
+      <div class="chart" role="img" aria-label="Monthly spending for the last six months">
+        {% for item in monthly_trend %}
+          <div class="chart-column">
+            <div class="chart-value">{% if item.total %}{{ currency_symbol }}{{ item.total|money }}{% endif %}</div>
+            <div class="chart-track"><div class="chart-bar {% if loop.last %}chart-bar-current{% endif %}" style="height: {{ (item.total / max_month_total * 100)|round|int }}%"></div></div>
+            <span class="chart-month">{{ item.month[5:] }}</span>
+          </div>
+        {% endfor %}
+      </div>
+      <div class="chart-legend"><span></span> Monthly expenses</div>
+    {% else %}
+      <div class="empty-chart"><span class="empty-icon">⌁</span><strong>Your spending story starts here</strong><span>Add your first expense to see your monthly trends.</span><a href="{{ url_for('tracker.create_expense') }}">Add an expense <span>→</span></a></div>
+    {% endif %}
+  </article>
+
+  <article class="panel category-panel">
+    <div class="panel-heading">
+      <div><h2>By category</h2><p>{{ current_month }} breakdown</p></div>
+      <span class="category-count">{{ category_totals|length }} categories</span>
+    </div>
+    {% if category_totals %}
+      {% set category_max = category_totals[0].total %}
+      <div class="category-list">
+        {% for item in category_totals %}
+          <div class="category-row">
+            <div class="category-line"><span class="category-name"><i class="category-dot dot-{{ loop.index0 % 6 }}"></i>{{ item.category }}</span><strong>{{ currency_symbol }}{{ item.total|money }}</strong></div>
+            <div class="progress-track"><div class="progress-bar progress-{{ loop.index0 % 6 }}" style="width: {{ (item.total / category_max * 100)|round|int }}%"></div></div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-category"><span class="empty-icon">◌</span><strong>No categories yet</strong><span>Category totals will show up as you log expenses.</span></div>
+    {% endif %}
+  </article>
+</section>
+
+<section class="panel transactions-panel">
+  <div class="panel-heading">
+    <div><h2>Recent transactions</h2><p>Your latest spending activity</p></div>
+    <a class="text-link" href="{{ url_for('tracker.expenses') }}">View all transactions <span>→</span></a>
+  </div>
+  {% if recent %}
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>TRANSACTION</th><th>CATEGORY</th><th>DATE</th><th class="amount-cell">AMOUNT</th><th></th></tr></thead>
+        <tbody>
+          {% for expense in recent %}
+            <tr>
+              <td><span class="transaction-avatar avatar-{{ loop.index0 % 6 }}">{{ expense.title[:1]|upper }}</span><span class="transaction-title">{{ expense.title }}</span></td>
+              <td><span class="category-pill">{{ expense.category }}</span></td>
+              <td class="muted-cell">{{ expense.spent_on }}</td>
+              <td class="amount-cell amount-value">−{{ currency_symbol }}{{ expense.amount_cents|money }}</td>
+              <td class="row-action"><a href="{{ url_for('tracker.edit_expense', expense_id=expense.id) }}" aria-label="Edit {{ expense.title }}">···</a></td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="empty-table"><span class="empty-icon">▤</span><strong>No expenses recorded yet</strong><span>When you add an expense, it will appear here.</span><a class="button button-outline" href="{{ url_for('tracker.create_expense') }}">Add your first expense</a></div>
+  {% endif %}
+</section>
+{% endblock %}
